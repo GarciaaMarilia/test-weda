@@ -15,13 +15,16 @@ const generateRandomSlots = () => {
   const [hourA, minuteA] = a.split(":").map(Number);
   const [hourB, minuteB] = b.split(":").map(Number);
 
-  return hourA - hourB || minuteA - minuteB; 
+  return hourA - hourB || minuteA - minuteB;
  });
 };
 
 export default function Calendar() {
  const [startDate, setStartDate] = useState<Date>(new Date());
  const [slots, setSlots] = useState<Record<string, string[]>>({});
+ const [selectedSlots, setSelectedSlots] = useState<{ [key: string]: number }>(
+  {}
+ );
 
  const days = Array.from({ length: 7 }, (_, i) => addDays(startDate, i));
 
@@ -36,6 +39,27 @@ export default function Calendar() {
 
  const goNextWeek = () => setStartDate(addDays(startDate, 7));
  const goPreviousWeek = () => setStartDate(subDays(startDate, 7));
+
+ const handleSlotClick = (day: string, slot: string) => {
+  const key = `${day}-${slot}`;
+  setSelectedSlots((prev) => ({
+   ...prev,
+   [key]: (prev[key] || 0) + 1 > 3 ? 0 : (prev[key] || 0) + 1,
+  }));
+ };
+
+ const getSlotColor = (state: number) => {
+  switch (state) {
+   case 1:
+    return "#000";
+   case 2:
+    return "#008000";
+   case 3:
+    return "#0000FF";
+   default:
+    return "#F5F5F5";
+  }
+ };
 
  return (
   <div style={{ padding: "16px", fontFamily: "Arial, sans-serif" }}>
@@ -91,25 +115,23 @@ export default function Calendar() {
        {format(day, "dd MMM", { locale: fr })}
       </div>
       <div>
-       {slots[day.toISOString()]?.map((slot, index) => (
+       {slots[day.toISOString()]?.map((slot) => (
         <div
-         key={index}
+         key={slot}
+         onClick={() => handleSlotClick(day.toISOString(), slot)}
          style={{
-          padding: "10px",
-          backgroundColor: "#f5f5f5",
+          padding: "8px",
+          backgroundColor: getSlotColor(
+           selectedSlots[`${day.toISOString()}-${slot}`] || 0
+          ),
           borderRadius: "4px",
           marginBottom: "4px",
+          textAlign: "center",
           cursor: "pointer",
-          transition: "0.2s",
+          color: selectedSlots[`${day.toISOString()}-${slot}`]
+           ? "#fff"
+           : "#000",
          }}
-         onMouseEnter={(e) => (
-          (e.currentTarget.style.backgroundColor = "black"),
-          (e.currentTarget.style.color = "white")
-         )}
-         onMouseLeave={(e) => (
-          (e.currentTarget.style.backgroundColor = "#f5f5f5"),
-          (e.currentTarget.style.color = "black")
-         )}
         >
          {slot}
         </div>
